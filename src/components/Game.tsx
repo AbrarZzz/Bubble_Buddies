@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import type { LeaderboardEntry } from '@/lib/types';
 import { Button } from './ui/button';
 import { RefreshCw, Trophy, Zap } from 'lucide-react';
-import { COLOR_MAP } from '@/lib/game-constants';
 
 interface GameProps {
   player: { name: string };
@@ -38,6 +37,13 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
   return (
     <main className="flex flex-col lg:flex-row min-h-screen items-center justify-center gap-8 p-4 sm:p-8 bg-background overflow-hidden">
       <div className="w-full lg:w-auto flex flex-col items-center gap-4">
+        <div className="w-full flex justify-between items-center px-4">
+            <h1 className="text-3xl font-bold text-primary">Bubble Buddies</h1>
+            <Button onClick={handleReset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                New Game
+            </Button>
+        </div>
         <GameBoard
           board={board}
           onShot={handleShot}
@@ -71,13 +77,6 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
       </div>
 
       <aside className="w-full lg:w-72 flex flex-col gap-6 items-center">
-          <div className="w-full flex justify-between items-center px-4">
-            <h1 className="text-3xl font-bold text-primary">Bubble Buddies</h1>
-            <Button onClick={handleReset}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                New Game
-            </Button>
-          </div>
           <Leaderboard entries={leaderboard} currentPlayer={player.name} />
       </aside>
 
