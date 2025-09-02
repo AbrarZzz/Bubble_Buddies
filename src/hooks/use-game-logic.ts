@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { GameBoard, Bubble, BubbleColor, LeaderboardEntry } from '@/lib/types';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
 import {
   BOARD_COLS,
   BOARD_ROWS,
   BUBBLE_COLORS,
-  LEVEL_DESIGNS,
-  SHOTS_BEFORE_ROW_ADVANCE,
+  GAME_BOARD_LAYOUT,
   GAME_OVER_ROW,
+  INITIAL_SHOTS,
+  BONUS_SHOTS,
+  SCORE_THRESHOLD_FOR_BONUS
 } from '@/lib/game-constants';
 
 let bubbleIdCounter = 0;
@@ -37,13 +39,13 @@ const createBoardFromLayout = (layout: (BubbleColor | null)[][]): GameBoard => {
 
 
 export const useGameLogic = (player: {name: string}, onGameOver: (name: string, score: number) => void) => {
-  const [level, setLevel] = useState(0);
-  const [board, setBoard] = useState<GameBoard>(() => createBoardFromLayout(LEVEL_DESIGNS[level]));
+  const [board, setBoard] = useState<GameBoard>(() => createBoardFromLayout(GAME_BOARD_LAYOUT));
   const [currentBubble, setCurrentBubble] = useState<Bubble>(() => createBubble(-2, -1, 'red'));
   const [nextBubble, setNextBubble] = useState<Bubble>(() => createBubble(-3, -1, 'blue'));
-  const [shots, setShots] = useState(0);
+  const [shotsRemaining, setShotsRemaining] = useState(INITIAL_SHOTS);
   const [score, setScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
+  const scoreMilestone = useRef(SCORE_THRESHOLD_FOR_BONUS);
 
   const availableColors = useMemo(() => {
     const colorsOnBoard = new Set<BubbleColor>();
@@ -63,25 +65,36 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     setNextBubble(createBubble(-3, -1, getNextBubbleColor()));
   }, [getNextBubbleColor]);
 
-  const resetGame = useCallback((newLevel: number = 0) => {
-    setLevel(newLevel);
-    setBoard(createBoardFromLayout(LEVEL_DESIGNS[newLevel % LEVEL_DESIGNS.length]));
-    setShots(0);
-    setScore(newLevel > level ? score : 0);
+  const resetGame = useCallback(() => {
+    setBoard(createBoardFromLayout(GAME_BOARD_LAYOUT));
+    setShotsRemaining(INITIAL_SHOTS);
+    setScore(0);
     setIsGameOver(false);
     resetBubbles();
-  }, [resetBubbles, level, score]);
+    scoreMilestone.current = SCORE_THRESHOLD_FOR_BONUS;
+  }, [resetBubbles]);
 
   useEffect(() => {
     resetBubbles();
   }, [availableColors, resetBubbles]);
 
+  useEffect(() => {
+    if (score >= scoreMilestone.current) {
+        setShotsRemaining(s => s + BONUS_SHOTS);
+        scoreMilestone.current += SCORE_THRESHOLD_FOR_BONUS;
+    }
+  }, [score]);
+
   const handleShot = (newBubble: Bubble) => {
+    if (isGameOver) return;
+    
+    setShotsRemaining(s => s - 1);
+
     const newBoard = board.map(row => [...row]);
     
-    // Check if the landing spot is valid
     if (newBubble.row < 0 || newBubble.row >= BOARD_ROWS || newBubble.col < 0 || newBubble.col >= BOARD_COLS || newBoard[newBubble.row][newBubble.col]) {
-        prepareNextShot();
+        if (shotsRemaining - 1 <= 0) endGame();
+        else prepareNextShot();
         return;
     }
     
@@ -123,45 +136,12 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
       }
     }, 300);
 
-    if (didPop) {
-      setShots(0); // Reset shot counter on a successful pop
-    } else {
-      setShots(s => s + 1);
-    }
-
-    if (!didPop && shots + 1 >= SHOTS_BEFORE_ROW_ADVANCE) {
-      advanceRows();
-    } else if (!didPop) {
+    if (!didPop) {
       if (newBubble.row >= GAME_OVER_ROW) {
         endGame();
+      } else if (shotsRemaining - 1 <= 0) {
+        endGame();
       }
-    }
-  };
-
-  const advanceRows = () => {
-    setShots(0);
-    const newBoard: GameBoard = Array(BOARD_ROWS).fill(0).map(() => Array(BOARD_COLS).fill(null));
-    let maxRow = 0;
-    
-    board.forEach(row => row.forEach(bubble => {
-      if (bubble) {
-        bubble.row += 1;
-        if (bubble.row < BOARD_ROWS) {
-            newBoard[bubble.row][bubble.col] = bubble;
-        }
-        if (bubble.row > maxRow) maxRow = bubble.row;
-      }
-    }));
-
-    for(let c=0; c<BOARD_COLS; c++) {
-      if(c % 2 === 0) {
-        newBoard[0][c] = createBubble(0, c, getNextBubbleColor());
-      }
-    }
-    
-    setBoard(newBoard);
-    if(maxRow + 1 >= GAME_OVER_ROW) {
-      endGame();
     }
   };
 
@@ -180,7 +160,8 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     if (bubblesLeft === 0) {
       setScore(s => s + 1000);
       setTimeout(() => {
-        resetGame(level + 1);
+        // Reset board for continuous play
+        setBoard(createBoardFromLayout(GAME_BOARD_LAYOUT));
       }, 1000);
     }
   }
@@ -199,8 +180,6 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     
     if (bubble.type === 'normal') {
       matches.push(bubble);
-    } else {
-      // Don't match with locked bubbles, just find neighbors to unlock
     }
 
     while(toCheck.length > 0) {
@@ -280,7 +259,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     currentBubble,
     nextBubble,
     score,
-    level,
+    shotsRemaining,
     isGameOver,
     handleShot,
     resetGame,

@@ -16,8 +16,7 @@ export interface GameState {
   currentBubble: Bubble;
   nextBubble: Bubble;
   score: number;
-  level: number;
-  shots: number;
+  shotsRemaining: number;
   isGameOver: boolean;
 }
 

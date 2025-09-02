@@ -7,7 +7,7 @@ import GameOverDialog from './GameOverDialog';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import type { LeaderboardEntry } from '@/lib/types';
 import { Button } from './ui/button';
-import { RefreshCw, Trophy, Target } from 'lucide-react';
+import { RefreshCw, Trophy, Zap } from 'lucide-react';
 import { COLOR_MAP } from '@/lib/game-constants';
 
 interface GameProps {
@@ -23,7 +23,7 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
     currentBubble,
     nextBubble,
     score,
-    level,
+    shotsRemaining,
     isGameOver,
     handleShot,
     resetGame,
@@ -57,8 +57,8 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
               <p className="text-2xl font-bold flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400"/> {score}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Level</p>
-              <p className="text-2xl font-bold flex items-center gap-2"><Target className="w-5 h-5 text-green-400"/> {level + 1}</p>
+              <p className="text-sm text-muted-foreground">Shots</p>
+              <p className="text-2xl font-bold flex items-center gap-2"><Zap className="w-5 h-5 text-green-400"/> {shotsRemaining}</p>
             </div>
           </CardContent>
         </Card>
