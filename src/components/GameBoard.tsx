@@ -35,17 +35,17 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
 
   useEffect(() => {
     const calculateScale = () => {
-      if (!boardRef.current) return;
-      const parentWidth = boardRef.current.parentElement?.clientWidth || 380;
       const baseBoardWidth = BOARD_COLS * BUBBLE_DIAMETER_BASE + BUBBLE_RADIUS_BASE;
-      const newScale = Math.min(1, parentWidth / baseBoardWidth);
+      const screenWidth = window.innerWidth;
+      const availableWidth = isMobile ? screenWidth - 16 : 480; // p-2 on each side for mobile
+      const newScale = Math.min(1, availableWidth / baseBoardWidth);
       setScale(newScale);
     };
 
     calculateScale();
     window.addEventListener('resize', calculateScale);
     return () => window.removeEventListener('resize', calculateScale);
-  }, []);
+  }, [isMobile]);
 
   const getBubblePixelPosition = useCallback((row: number, col: number) => {
     const x = col * BUBBLE_DIAMETER + (row % 2 === 1 ? BUBBLE_RADIUS : 0);
