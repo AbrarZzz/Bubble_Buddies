@@ -146,7 +146,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
     }
     
     if (closestCell.row !== -1) {
-        const shotBubble: Bubble = { id: -2, row: closestCell.row, col: closestCell.col, color: currentBubbleColor, type: 'normal' };
+        const shotBubble: Bubble = { id: Date.now(), row: closestCell.row, col: closestCell.col, color: currentBubbleColor, type: 'normal' };
         setShootingBubble(shotBubble);
         
         setTimeout(() => {
