@@ -5,6 +5,7 @@ import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
 import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT, COLOR_MAP } from '@/lib/game-constants';
 import SingleBubble from './Bubble';
 import { cn } from '@/lib/utils';
+import { Target } from 'lucide-react';
 
 interface GameBoardProps {
   board: GameBoard;
@@ -31,14 +32,16 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
 
   const shooterPosition = useMemo(() => ({
     x: BOARD_PIXEL_WIDTH / 2 - BUBBLE_RADIUS,
-    y: BOARD_PIXEL_HEIGHT + 10,
+    y: BOARD_PIXEL_HEIGHT + 20, // Adjusted for cannon
   }), []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isGameOver || !boardRef.current || isAdvancing || shootingBubble) return;
     const rect = boardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left - shooterPosition.x - BUBBLE_RADIUS;
-    const y = e.clientY - rect.top - shooterPosition.y - BUBBLE_RADIUS;
+    const cannonCenterX = shooterPosition.x + BUBBLE_RADIUS;
+    const cannonCenterY = shooterPosition.y;
+    const x = e.clientX - rect.left - cannonCenterX;
+    const y = e.clientY - rect.top - cannonCenterY;
     const angle = Math.atan2(y, x) * 180 / Math.PI;
     if (angle < -170 || angle > -10) return;
     setAimAngle(angle);
@@ -51,15 +54,13 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     
     // Simplified trajectory simulation to find landing spot
     let x = shooterPosition.x + BUBBLE_RADIUS;
-    let y = shooterPosition.y + BUBBLE_RADIUS;
+    let y = shooterPosition.y;
     let dx = Math.cos(angleRad) * 8;
     let dy = Math.sin(angleRad) * 8;
-    let path = [{x, y}];
 
     while (y > -BUBBLE_DIAMETER) {
         x += dx;
         y += dy;
-        path.push({x, y});
 
         if (x < BUBBLE_RADIUS || x > BOARD_PIXEL_WIDTH - BUBBLE_RADIUS) {
             dx *= -1; // Bounce off walls
@@ -85,14 +86,20 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     let closestCell = { row: -1, col: -1, dist: Infinity };
     for (let r = 0; r < BOARD_ROWS; r++) {
         for (let c = 0; c < BOARD_COLS; c++) {
-            const cellPos = getBubblePixelPosition(r, c);
-            const dist = Math.sqrt(Math.pow(x - (cellPos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (cellPos.y + BUBBLE_RADIUS), 2));
-            const isNeighborToExisting = (r > 0 && c > 0 && board[r - 1]?.[c + (r % 2 === 1 ? 0 : -1)]) ||
-              (r > 0 && c < BOARD_COLS - 1 && board[r-1]?.[c + (r % 2 === 1 ? 1 : 0)]) ||
-              board[r]?.[c - 1] || board[r]?.[c + 1] || board[r + 1]?.[c];
-            
-            if (!board[r][c] && (r === 0 || isNeighborToExisting) && dist < closestCell.dist) {
-                closestCell = { row: r, col: c, dist };
+            if (!board[r][c]) {
+                const cellPos = getBubblePixelPosition(r, c);
+                const dist = Math.sqrt(Math.pow(x - (cellPos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (cellPos.y + BUBBLE_RADIUS), 2));
+                const isNeighborToExisting = 
+                  (r === 0) ||
+                  (board[r - 1]?.[c + (r % 2 === 1 ? 0 : -1)]) ||
+                  (board[r-1]?.[c + (r % 2 === 1 ? 1 : 0)]) ||
+                  board[r]?.[c - 1] || board[r]?.[c + 1] || 
+                  board[r + 1]?.[c + (r % 2 === 0 ? 0 : -1)] ||
+                  board[r+1]?.[c + (r % 2 === 0 ? 1 : 0)];
+                
+                if ((r === 0 || isNeighborToExisting) && dist < closestCell.dist) {
+                    closestCell = { row: r, col: c, dist };
+                }
             }
         }
     }
@@ -115,7 +122,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     <div
       ref={boardRef}
       className="relative bg-card/50 rounded-lg shadow-inner overflow-hidden"
-      style={{ width: BOARD_PIXEL_WIDTH, height: BOARD_PIXEL_HEIGHT + 60, cursor: isAdvancing || shootingBubble ? 'wait' : 'pointer' }}
+      style={{ width: BOARD_PIXEL_WIDTH, height: BOARD_PIXEL_HEIGHT + 80, cursor: isAdvancing || shootingBubble ? 'wait' : 'pointer' }}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
     >
@@ -131,11 +138,6 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
 
       {shootingBubble && (
         <div onAnimationEnd={handleAnimationEnd}>
-          <SingleBubble
-            bubble={shootingBubble.bubble}
-            x={shootingBubble.start.x}
-            y={shootingBubble.start.y}
-          />
           <style>{`
             @keyframes shoot-bubble {
               to {
@@ -150,37 +152,70 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
             bubble={shootingBubble.bubble}
             x={shootingBubble.start.x}
             y={shootingBubble.start.y}
-            className="shooting-bubble"
+            className="shooting-bubble z-10"
           />
         </div>
       )}
 
-      {!isGameOver && !isAdvancing && !shootingBubble && (
-          <>
-            <div className="absolute pointer-events-none" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
-                <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
-            </div>
-             <div className="absolute pointer-events-none" style={{ right: BUBBLE_RADIUS, bottom: BUBBLE_RADIUS, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="text-sm font-bold text-primary">Next:</span>
-                <div className="w-8 h-8 rounded-full" style={{ backgroundColor: COLOR_MAP[nextBubbleColor] }}></div>
-            </div>
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                  left: shooterPosition.x + BUBBLE_RADIUS,
-                  bottom: 30,
-                  transform: `rotate(${aimAngle + 90}deg)`,
-                  transformOrigin: 'bottom center',
-                  transition: 'transform 0.1s ease-out'
-              }}
-            >
-              <div className="w-1.5 h-24 bg-gradient-to-t from-primary/20 to-primary/80 rounded-t-full relative flex justify-center">
-                <div className="absolute -top-1 w-4 h-4 border-2 border-primary rounded-full bg-background" />
+      {/* Cannon and Aiming UI */}
+      {!isGameOver && (
+          <div className="absolute" style={{ left: shooterPosition.x - 10, top: shooterPosition.y - 10 }}>
+              {/* Cannon Base */}
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center shadow-lg">
+                  <div className="w-16 h-16 bg-card rounded-full" />
               </div>
-            </div>
-          </>
+
+              {/* Cannon Barrel and Arrow */}
+              <div
+                className="absolute w-20 h-20 top-0 left-0 flex justify-center pointer-events-none"
+                style={{
+                    transform: `rotate(${aimAngle + 90}deg)`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.1s ease-out'
+                }}
+              >
+                  {/* Barrel */}
+                  <div className="absolute top-[-20px] w-8 h-12 bg-muted rounded-t-md shadow-inner" />
+                  
+                  {/* Arrow */}
+                  {!isAdvancing && !shootingBubble && (
+                    <svg
+                      width="12"
+                      height="100"
+                      viewBox="0 0 12 100"
+                      className="absolute -top-24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <linearGradient id="arrow-gradient" x1="0.5" y1="0" x2="0.5" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M6 100 L6 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
+                      <path d="M6 0 L11 10 L1 10 Z" fill="hsl(var(--primary))" />
+                    </svg>
+                  )}
+              </div>
+
+              {/* Current Bubble */}
+              {!isAdvancing && !shootingBubble && (
+                  <div className="absolute pointer-events-none" style={{ left: 10, top: 10 }}>
+                      <SingleBubble bubble={{id: -2, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
+                  </div>
+              )}
+          </div>
       )}
 
+      {/* Next Bubble */}
+      {!isGameOver && !isAdvancing && (
+        <div className="absolute pointer-events-none" style={{ right: BUBBLE_RADIUS, bottom: BUBBLE_RADIUS, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="text-sm font-bold text-primary">Next:</span>
+            <div className="w-8 h-8 rounded-full" style={{ backgroundColor: COLOR_MAP[nextBubbleColor] }}></div>
+        </div>
+      )}
+      
       <div 
         className="absolute w-full border-t-2 border-dashed border-red-500/50 pointer-events-none"
         style={{ top: GAME_OVER_ROW * HEX_HEIGHT }}
@@ -188,3 +223,5 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     </div>
   );
 }
+
+    
