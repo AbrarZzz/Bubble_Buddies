@@ -12,11 +12,11 @@ import { RefreshCw, Trophy, Zap } from 'lucide-react';
 interface GameProps {
   player: { name: string };
   leaderboard: LeaderboardEntry[];
-  onGameOver: (name: string, score: number) => void;
+  onScoreUpdate: (name: string, score: number) => void;
   onPlayAgain: () => void;
 }
 
-export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: GameProps) {
+export default function Game({ player, leaderboard, onScoreUpdate, onPlayAgain }: GameProps) {
   const {
     board,
     currentBubble,
@@ -27,7 +27,7 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
     handleShot,
     resetGame,
     isAdvancing,
-  } = useGameLogic(player, onGameOver);
+  } = useGameLogic(player, onScoreUpdate);
   
   const handleReset = () => {
     onPlayAgain();

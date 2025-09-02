@@ -39,7 +39,7 @@ const createBoardFromLayout = (layout: (BubbleColor | null)[][]): GameBoard => {
 };
 
 
-export const useGameLogic = (player: {name: string}, onGameOver: (name: string, score: number) => void) => {
+export const useGameLogic = (player: {name: string}, onScoreUpdate: (name: string, score: number) => void) => {
   const [board, setBoard] = useState<GameBoard>(() => createBoardFromLayout(GAME_BOARD_LAYOUT));
   const [currentBubble, setCurrentBubble] = useState<Bubble>(() => createBubble(-2, -1, 'pink-1'));
   const [nextBubble, setNextBubble] = useState<Bubble>(() => createBubble(-3, -1, 'pink-2'));
@@ -87,7 +87,12 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
         setShotsRemaining(s => s + BONUS_SHOTS);
         scoreMilestone.current += SCORE_THRESHOLD_FOR_BONUS;
     }
-  }, [score]);
+    // Update the leaderboard in real-time
+    if (!isGameOver) {
+      onScoreUpdate(player.name, score);
+    }
+  }, [score, isGameOver, player.name, onScoreUpdate]);
+
 
   const advanceBoard = () => {
     setIsAdvancing(true);
@@ -221,7 +226,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
 
   const endGame = () => {
     setIsGameOver(true);
-    onGameOver(player.name, score);
+    onScoreUpdate(player.name, score);
   };
   
   const checkWinCondition = (currentBoard: GameBoard) => {
@@ -333,5 +338,3 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     shotsUntilAdvance,
   };
 };
-
-    

@@ -57,7 +57,7 @@ export default function Home() {
     <Game
       player={player}
       leaderboard={leaderboard}
-      onGameOver={updateLeaderboard}
+      onScoreUpdate={updateLeaderboard}
       onPlayAgain={handlePlayAgain}
     />
   );
