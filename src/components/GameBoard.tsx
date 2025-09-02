@@ -4,7 +4,6 @@ import { useRef, useState, useMemo, useCallback } from 'react';
 import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
 import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT } from '@/lib/game-constants';
 import SingleBubble from './Bubble';
-import { MoveUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface GameBoardProps {
