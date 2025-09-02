@@ -11,7 +11,7 @@ export const GAME_OVER_ROW = 14;
 export const INITIAL_SHOTS = 20;
 export const BONUS_SHOTS = 10;
 export const SCORE_THRESHOLD_FOR_BONUS = 5000;
-export const SHOTS_UNTIL_BOARD_ADVANCE = 1;
+export const SHOTS_UNTIL_BOARD_ADVANCE = 3;
 
 export const BUBBLE_COLORS: BubbleColor[] = ['pink-1', 'pink-2', 'pink-3', 'pink-4', 'pink-5', 'pink-6'];
 
