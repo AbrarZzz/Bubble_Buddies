@@ -127,7 +127,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
       {!isGameOver && !isAdvancing && (
           <>
             <div className="absolute pointer-events-none" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
-                <SingleBubble bubble={{id: -2, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
+                <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
             </div>
             <div
               className="absolute pointer-events-none"
@@ -139,8 +139,8 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
                   transition: 'transform 0.1s ease-out'
               }}
             >
-              <div className="w-1 h-20 bg-primary/50 rounded-t-full relative">
-                <div className="absolute -top-4 -left-1.5 w-4 h-4 border-2 border-primary rounded-full" />
+              <div className="w-1.5 h-24 bg-gradient-to-t from-primary/20 to-primary/80 rounded-t-full relative flex justify-center">
+                <div className="absolute -top-1 w-4 h-4 border-2 border-primary rounded-full bg-background" />
               </div>
             </div>
           </>
