@@ -120,72 +120,81 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     }, 500);
   };
   
-  const handleShot = (newBubble: Bubble) => {
-    if (isGameOver || isAdvancing) return;
-    
-    setShotsRemaining(s => s - 1);
-
-    const newBoard = board.map(row => [...row]);
-    
-    if (newBubble.row < 0 || newBubble.row >= BOARD_ROWS || newBubble.col < 0 || newBubble.col >= BOARD_COLS || newBoard[newBubble.row][newBubble.col]) {
-        if (shotsRemaining - 1 <= 0) endGame();
-        else prepareNextShot();
-        return;
-    }
-    
+  const processShot = (newBubble: Bubble, currentBoard: GameBoard) => {
+    let newBoard = currentBoard.map(row => [...row]);
     newBoard[newBubble.row][newBubble.col] = newBubble;
-    
+  
     const matches = findMatches(newBubble, newBoard);
-    
     let didPop = false;
+  
     if (matches.length >= 3) {
       didPop = true;
       matches.forEach(b => {
-          if (newBoard[b.row][b.col]) {
-              (newBoard[b.row][b.col] as Bubble).status = 'popping';
-          }
+        const bubble = newBoard[b.row]?.[b.col];
+        if (bubble) {
+          bubble.status = 'popping';
+        }
       });
       setScore(s => s + matches.length * 10);
+  
+      setTimeout(() => {
+        let boardAfterPop = newBoard.map(row => row.map(b => (b && b.status === 'popping' ? null : b)));
+        processFloatingBubbles(boardAfterPop, didPop);
+      }, 300);
+    } else {
+      processFloatingBubbles(newBoard, didPop);
     }
-    
-    setTimeout(() => {
-      let boardAfterPop = newBoard.map(row => row.map(b => (b && b.status === 'popping' ? null : b)));
-      const floating = findFloatingBubbles(boardAfterPop);
-      if(floating.length > 0) {
-        didPop = true;
-        floating.forEach(b => {
-          if (boardAfterPop[b.row][b.col]) {
-              (boardAfterPop[b.row][b.col] as Bubble).status = 'falling';
-          }
-        });
-        setScore(s => s + floating.length * 20);
+  };
 
-        setTimeout(() => {
-           let finalBoard = boardAfterPop.map(row => row.map(b => (b && b.status === 'falling' ? null : b)));
-           setBoard(finalBoard);
-           checkWinCondition(finalBoard);
-        }, 300);
-      } else {
-        setBoard(boardAfterPop);
-        checkWinCondition(boardAfterPop);
-      }
-      
-      if (!didPop) {
-        if (shotsUntilAdvance - 1 <= 0) {
-          advanceBoard();
-          setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
-        } else {
-          setShotsUntilAdvance(s => s - 1);
+  const processFloatingBubbles = (currentBoard: GameBoard, didPop: boolean) => {
+    const floating = findFloatingBubbles(currentBoard);
+  
+    if (floating.length > 0) {
+      floating.forEach(b => {
+        const bubble = currentBoard[b.row]?.[b.col];
+        if (bubble) {
+          bubble.status = 'falling';
         }
+      });
+      setScore(s => s + floating.length * 20);
+  
+      setTimeout(() => {
+        let finalBoard = currentBoard.map(row => row.map(b => (b && b.status === 'falling' ? null : b)));
+        setBoard(finalBoard);
+        checkWinCondition(finalBoard);
+        handleBoardAdvancement(true); // true since pops happened (floating counts)
+      }, 300);
+    } else {
+      setBoard(currentBoard);
+      checkWinCondition(currentBoard);
+      handleBoardAdvancement(didPop);
+    }
+  };
+
+  const handleBoardAdvancement = (didPop: boolean) => {
+    if (!didPop) {
+      if (shotsUntilAdvance - 1 <= 0) {
+        advanceBoard();
+        setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
       } else {
-         if (shotsUntilAdvance - 1 <= 0) {
-          advanceBoard();
-          setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
-        }
+        setShotsUntilAdvance(s => s - 1);
       }
-
-    }, 300);
-
+    }
+  };
+  
+  const handleShot = (newBubble: Bubble) => {
+    if (isGameOver || isAdvancing) return;
+  
+    setShotsRemaining(s => s - 1);
+  
+    if (newBubble.row < 0 || newBubble.row >= BOARD_ROWS || newBubble.col < 0 || newBubble.col >= BOARD_COLS || board[newBubble.row][newBubble.col]) {
+      if (shotsRemaining - 1 <= 0) endGame();
+      else prepareNextShot();
+      return;
+    }
+  
+    processShot(newBubble, board);
+  
     if (newBubble.row >= GAME_OVER_ROW) {
       endGame();
     } else if (shotsRemaining - 1 <= 0) {
@@ -210,7 +219,6 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     if (bubblesLeft === 0) {
       setScore(s => s + 1000);
       setTimeout(() => {
-        // Reset board for continuous play
         setBoard(createBoardFromLayout(GAME_BOARD_LAYOUT));
       }, 1000);
     }
@@ -282,7 +290,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
       const neighbors = getNeighbors(current, board);
       for (const neighbor of neighbors) {
         const key = `${neighbor.row},${neighbor.col}`;
-        if (!connected.has(key)) {
+        if (neighbor && !connected.has(key)) {
           connected.add(key);
           toCheck.push(neighbor);
         }
