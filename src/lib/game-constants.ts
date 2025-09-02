@@ -1,6 +1,6 @@
 import type { BubbleColor } from './types';
 
-export const BUBBLE_DIAMETER = 40;
+export const BUBBLE_DIAMETER = 32;
 export const BUBBLE_RADIUS = BUBBLE_DIAMETER / 2;
 export const BOARD_COLS = 14;
 export const BOARD_ROWS = 20;
