@@ -21,6 +21,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
   const boardRef = useRef<HTMLDivElement>(null);
   const [aimAngle, setAimAngle] = useState(0);
   const [shootingBubble, setShootingBubble] = useState<Bubble | null>(null);
+  const [trajectory, setTrajectory] = useState<string>("");
 
   const getBubblePixelPosition = (row: number, col: number) => {
     const x = col * BUBBLE_DIAMETER + (row % 2 === 1 ? BUBBLE_RADIUS : 0);
@@ -33,6 +34,53 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
     y: BOARD_PIXEL_HEIGHT + 10,
   }), []);
 
+  const updateTrajectory = useCallback((angle: number) => {
+    const angleRad = angle * Math.PI / 180;
+    let x = shooterPosition.x + BUBBLE_RADIUS;
+    let y = shooterPosition.y + BUBBLE_RADIUS;
+    let dx = Math.cos(angleRad);
+    let dy = Math.sin(angleRad);
+
+    const path = [`M${x},${y}`];
+    let bouncePoint: {x: number, y: number} | null = null;
+    
+    for (let i = 0; i < 500; i++) { // Limit path length
+        x += dx * 5;
+        y += dy * 5;
+
+        if (!bouncePoint && (x < BUBBLE_RADIUS || x > BOARD_PIXEL_WIDTH - BUBBLE_RADIUS)) {
+            bouncePoint = {x, y};
+            dx *= -1;
+        }
+
+        let hit = false;
+        for (let r = 0; r < BOARD_ROWS; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                if (board[r][c]) {
+                    const bubblePos = getBubblePixelPosition(r, c);
+                    const dist = Math.sqrt(Math.pow(x - (bubblePos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (bubblePos.y + BUBBLE_RADIUS), 2));
+                    if (dist < BUBBLE_DIAMETER) {
+                        hit = true;
+                        break;
+                    }
+                }
+            }
+            if (hit) break;
+        }
+        if (hit || y < 0) {
+            break;
+        }
+    }
+    
+    if (bouncePoint) {
+      path.push(`L${bouncePoint.x},${bouncePoint.y}`);
+    }
+    path.push(`L${x},${y}`);
+    setTrajectory(path.join(' '));
+
+  }, [shooterPosition, board]);
+
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isGameOver || !boardRef.current || shootingBubble) return;
     const rect = boardRef.current.getBoundingClientRect();
@@ -41,6 +89,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
     const angle = Math.atan2(y, x) * 180 / Math.PI;
     if (angle < -170 || angle > -10) return;
     setAimAngle(angle);
+    updateTrajectory(angle);
   };
 
   const handleClick = () => {
@@ -103,6 +152,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
         setTimeout(() => {
             onShot(shotBubble);
             setShootingBubble(null);
+            setTrajectory(""); // Clear trajectory after shot
         }, 300); // Corresponds to animation duration
     }
   };
@@ -115,7 +165,11 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
       style={{ width: BOARD_PIXEL_WIDTH, height: BOARD_PIXEL_HEIGHT + 60 }}
       onMouseMove={handleMouseMove}
       onClick={handleClick}
+      onMouseLeave={() => setTrajectory("")}
     >
+      <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <path d={trajectory} stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="5,5" fill="none" />
+      </svg>
       {board.map((row, r) =>
         row.map((bubble, c) => {
           if (!bubble) return null;
