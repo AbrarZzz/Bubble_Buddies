@@ -10,28 +10,33 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ entries, currentPlayer }: LeaderboardProps) {
-  const topEntries = entries.slice(0, 5);
+  const topEntries = entries.slice(0, 10);
   return (
-    <Card className="shadow-lg w-full max-w-4xl">
+    <Card className="shadow-lg w-full">
+      <CardHeader>
+        <CardTitle className="text-center text-2xl font-bold text-primary flex items-center justify-center gap-2">
+            <Crown className="w-6 h-6 text-yellow-400"/> Leaderboard
+        </CardTitle>
+      </CardHeader>
       <CardContent className="p-2">
-        <div className="flex justify-around items-center">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40px]">Rank</TableHead>
+              <TableHead>Player</TableHead>
+              <TableHead className="text-right">Score</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {topEntries.map((entry, index) => (
-              <div
-                key={entry.name}
-                className={cn(
-                    'flex items-center gap-3 p-2 rounded-lg',
-                    entry.name === currentPlayer && 'bg-primary/20'
-                )}
-              >
-                <div className="font-bold text-lg text-primary">#{index + 1}</div>
-                <div>
-                    <div className="font-semibold">{entry.name}</div>
-                    <div className="text-sm text-muted-foreground">{entry.score.toLocaleString()}</div>
-                </div>
-                {index === 0 && <Crown className="w-6 h-6 text-yellow-400 ml-2"/>}
-              </div>
+              <TableRow key={entry.name} className={cn(entry.name === currentPlayer && 'bg-primary/20')}>
+                <TableCell className="font-medium text-center">{index + 1}</TableCell>
+                <TableCell>{entry.name}</TableCell>
+                <TableCell className="text-right">{entry.score.toLocaleString()}</TableCell>
+              </TableRow>
             ))}
-        </div>
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

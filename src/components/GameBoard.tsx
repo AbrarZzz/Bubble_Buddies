@@ -2,14 +2,16 @@
 
 import { useRef, useState, useMemo, useCallback } from 'react';
 import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
-import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT } from '@/lib/game-constants';
+import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT, COLOR_MAP } from '@/lib/game-constants';
 import SingleBubble from './Bubble';
 import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface GameBoardProps {
   board: GameBoard;
   onShot: (bubble: Bubble) => void;
   currentBubbleColor: BubbleColor;
+  nextBubbleColor: BubbleColor;
   isGameOver: boolean;
   isAdvancing: boolean;
 }
@@ -17,7 +19,7 @@ interface GameBoardProps {
 const BOARD_PIXEL_WIDTH = BOARD_COLS * BUBBLE_DIAMETER + BUBBLE_RADIUS;
 const BOARD_PIXEL_HEIGHT = (BOARD_ROWS -1) * HEX_HEIGHT + BUBBLE_DIAMETER;
 
-export default function GameBoard({ board, onShot, currentBubbleColor, isGameOver, isAdvancing }: GameBoardProps) {
+export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbleColor, isGameOver, isAdvancing }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [aimAngle, setAimAngle] = useState(0);
 
@@ -127,6 +129,10 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
           <>
             <div className="absolute pointer-events-none" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
                 <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
+            </div>
+             <div className="absolute pointer-events-none" style={{ right: BUBBLE_RADIUS, bottom: BUBBLE_RADIUS, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="text-sm font-bold text-primary">Next:</span>
+                <div className="w-8 h-8 rounded-full" style={{ backgroundColor: COLOR_MAP[nextBubbleColor] }}></div>
             </div>
             <div
               className="absolute pointer-events-none"
