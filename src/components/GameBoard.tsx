@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useRef, useState, useMemo, useCallback } from 'react';
@@ -160,37 +161,17 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
       {/* Aiming UI */}
       {!isGameOver && (
           <div className="absolute" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
-              {/* Aiming Arrow */}
+              {/* Aiming Line */}
               <div
-                className="absolute w-full h-full pointer-events-none"
+                className="absolute w-px h-[200px] pointer-events-none bg-gradient-to-t from-primary to-transparent"
                 style={{
                     transform: `rotate(${aimAngle + 90}deg)`,
-                    transformOrigin: `${BUBBLE_RADIUS}px ${BUBBLE_RADIUS}px`,
+                    transformOrigin: `center ${BUBBLE_RADIUS}px`,
+                    bottom: BUBBLE_DIAMETER-5,
+                    left: BUBBLE_RADIUS,
                     transition: 'transform 0.1s ease-out'
                 }}
-              >
-                  {!isAdvancing && !shootingBubble && (
-                     <svg
-                        width="8"
-                        height="150"
-                        viewBox="0 0 8 150"
-                        className="absolute"
-                        style={{ bottom: BUBBLE_DIAMETER - 5, left: '50%', transform: 'translateX(-50%)' }}
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <defs>
-                          <linearGradient id="arrow-gradient" x1="0.5" y1="0" x2="0.5" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
-                            <stop offset="80%" stopColor="hsl(var(--primary))" stopOpacity="0.5" />
-                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M4 150 L4 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
-                        <path d="M4 0 L8 12 L0 12 Z" fill="hsl(var(--primary))" />
-                      </svg>
-                  )}
-              </div>
+              />
 
               {/* Current Bubble */}
               {!isAdvancing && !shootingBubble && (
