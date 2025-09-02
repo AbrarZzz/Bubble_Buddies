@@ -39,8 +39,8 @@ const createBoardFromLayout = (layout: (BubbleColor | null)[][]): GameBoard => {
 export const useGameLogic = (player: {name: string}, onGameOver: (name: string, score: number) => void) => {
   const [level, setLevel] = useState(0);
   const [board, setBoard] = useState<GameBoard>(() => createBoardFromLayout(LEVEL_DESIGNS[level]));
-  const [currentBubble, setCurrentBubble] = useState<Bubble>(() => createBubble(-1, -1));
-  const [nextBubble, setNextBubble] = useState<Bubble>(() => createBubble(-1, -1));
+  const [currentBubble, setCurrentBubble] = useState<Bubble>(() => createBubble(-2, -1, 'red'));
+  const [nextBubble, setNextBubble] = useState<Bubble>(() => createBubble(-3, -1, 'blue'));
   const [shots, setShots] = useState(0);
   const [score, setScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -59,8 +59,8 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
   }, [availableColors]);
   
   const resetBubbles = useCallback(() => {
-    setCurrentBubble(createBubble(-1, -1, getNextBubbleColor()));
-    setNextBubble(createBubble(-1, -1, getNextBubbleColor()));
+    setCurrentBubble(createBubble(-2, -1, getNextBubbleColor()));
+    setNextBubble(createBubble(-3, -1, getNextBubbleColor()));
   }, [getNextBubbleColor]);
 
   const resetGame = useCallback((newLevel: number = 0) => {
@@ -80,8 +80,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     const newBoard = board.map(row => [...row]);
     
     // Check if the landing spot is valid
-    if (newBubble.row < 0 || newBubble.row >= BOARD_ROWS || newBubble.col < 0 || newBubble.col >= BOARD_COLS) {
-        // Invalid shot, off the board
+    if (newBubble.row < 0 || newBubble.row >= BOARD_ROWS || newBubble.col < 0 || newBubble.col >= BOARD_COLS || newBoard[newBubble.row][newBubble.col]) {
         prepareNextShot();
         return;
     }
@@ -124,12 +123,15 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
       }
     }, 300);
 
-    setShots(s => s + 1);
+    if (didPop) {
+      setShots(0); // Reset shot counter on a successful pop
+    } else {
+      setShots(s => s + 1);
+    }
 
     if (!didPop && shots + 1 >= SHOTS_BEFORE_ROW_ADVANCE) {
       advanceRows();
     } else if (!didPop) {
-      // Check for game over on non-popping shots
       if (newBubble.row >= GAME_OVER_ROW) {
         endGame();
       }
@@ -151,9 +153,8 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
       }
     }));
 
-    // Add new top row
     for(let c=0; c<BOARD_COLS; c++) {
-      if(Math.random() > 0.4) { // Don't fill every spot
+      if(c % 2 === 0) {
         newBoard[0][c] = createBubble(0, c, getNextBubbleColor());
       }
     }
@@ -166,7 +167,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
 
   const prepareNextShot = () => {
     setCurrentBubble(nextBubble);
-    setNextBubble(createBubble(-1, -1, getNextBubbleColor()));
+    setNextBubble(createBubble(-3, -1, getNextBubbleColor()));
   };
 
   const endGame = () => {
@@ -193,17 +194,25 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
   const findMatches = (bubble: Bubble, board: GameBoard): Bubble[] => {
     const toCheck = [bubble];
     const checked = new Set<string>();
-    const matches = [bubble];
+    const matches: Bubble[] = [];
     checked.add(`${bubble.row},${bubble.col}`);
     
+    if (bubble.type === 'normal') {
+      matches.push(bubble);
+    } else {
+      // Don't match with locked bubbles, just find neighbors to unlock
+    }
+
     while(toCheck.length > 0) {
       const current = toCheck.pop()!;
       const neighbors = getNeighbors(current, board);
       for(const neighbor of neighbors) {
         const key = `${neighbor.row},${neighbor.col}`;
-        if(!checked.has(key) && neighbor.color === bubble.color && neighbor.type === 'normal') {
-          matches.push(neighbor);
-          toCheck.push(neighbor);
+        if(!checked.has(key) && neighbor.color === bubble.color) {
+          if (neighbor.type === 'normal') {
+             matches.push(neighbor);
+             toCheck.push(neighbor);
+          }
           checked.add(key);
         }
       }
@@ -217,12 +226,12 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     const isOddRow = row % 2 !== 0;
 
     const neighborCoords = [
-        { r: row, c: col - 1 }, // left
-        { r: row, c: col + 1 }, // right
-        { r: row - 1, c: col }, // top-middle
-        { r: row + 1, c: col }, // bottom-middle
-        { r: row - 1, c: isOddRow ? col + 1 : col - 1 }, // top-right/left
-        { r: row + 1, c: isOddRow ? col + 1 : col - 1 }, // bottom-right/left
+      { r: row, c: col - 1 }, // left
+      { r: row, c: col + 1 }, // right
+      { r: row - 1, c: col }, // top-middle
+      { r: row + 1, c: col }, // bottom-middle
+      { r: row - 1, c: isOddRow ? col + 1 : col - 1 }, // top-right/left
+      { r: row + 1, c: isOddRow ? col + 1 : col - 1 }, // bottom-right/left
     ];
 
     neighborCoords.forEach(n => {
@@ -238,7 +247,6 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     const connected = new Set<string>();
     const toCheck: Bubble[] = [];
 
-    // All top row bubbles are connected by default
     board[0].forEach(bubble => {
       if (bubble) {
         toCheck.push(bubble);
