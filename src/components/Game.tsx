@@ -37,7 +37,7 @@ export default function Game({ player, leaderboard, onScoreUpdate, onPlayAgain }
   return (
     <main className="flex flex-col lg:flex-row min-h-screen items-center justify-center gap-8 p-4 sm:p-8 bg-background overflow-hidden">
       <div className="w-full lg:w-auto flex flex-col items-center gap-4">
-        <div className="w-full flex justify-between items-center px-4">
+        <div className="w-full max-w-sm md:max-w-md flex justify-between items-center px-4">
             <h1 className="text-3xl font-bold text-primary">Bubble Buddies</h1>
             <Button onClick={handleReset}>
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -52,7 +52,7 @@ export default function Game({ player, leaderboard, onScoreUpdate, onPlayAgain }
           isGameOver={isGameOver}
           isAdvancing={isAdvancing}
         />
-        <div className="w-full max-w-md flex justify-around items-center">
+        <div className="w-full max-w-sm md:max-w-md flex justify-around items-center">
           <Card className="shadow-lg">
               <CardHeader className="p-4">
                   <CardTitle className="text-center text-lg font-bold text-primary flex items-center justify-center gap-2">

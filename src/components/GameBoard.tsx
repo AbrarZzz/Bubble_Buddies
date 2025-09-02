@@ -1,12 +1,13 @@
 
 "use client";
 
-import { useRef, useState, useMemo, useCallback } from 'react';
+import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
 import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
-import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT, COLOR_MAP } from '@/lib/game-constants';
+import { BUBBLE_DIAMETER_BASE, BUBBLE_RADIUS_BASE, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW, HEX_HEIGHT_RATIO, COLOR_MAP } from '@/lib/game-constants';
 import SingleBubble from './Bubble';
 import { cn } from '@/lib/utils';
-import { Target } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 interface GameBoardProps {
   board: GameBoard;
@@ -17,33 +18,53 @@ interface GameBoardProps {
   isAdvancing: boolean;
 }
 
-const BOARD_PIXEL_WIDTH = BOARD_COLS * BUBBLE_DIAMETER + BUBBLE_RADIUS;
-const BOARD_PIXEL_HEIGHT = (BOARD_ROWS - 1) * HEX_HEIGHT + BUBBLE_DIAMETER;
-
 export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbleColor, isGameOver, isAdvancing }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [aimAngle, setAimAngle] = useState(0);
   const [shootingBubble, setShootingBubble] = useState<{ bubble: Bubble; start: { x: number; y: number }; end: { x: number; y: number } } | null>(null);
   const [trajectory, setTrajectory] = useState<string>("");
+  const isMobile = useIsMobile();
+  const [scale, setScale] = useState(1);
+  
+  const BUBBLE_DIAMETER = BUBBLE_DIAMETER_BASE * scale;
+  const BUBBLE_RADIUS = BUBBLE_RADIUS_BASE * scale;
+  const HEX_HEIGHT = BUBBLE_DIAMETER * HEX_HEIGHT_RATIO;
+  
+  const BOARD_PIXEL_WIDTH = BOARD_COLS * BUBBLE_DIAMETER + BUBBLE_RADIUS;
+  const BOARD_PIXEL_HEIGHT = (BOARD_ROWS - 1) * HEX_HEIGHT + BUBBLE_DIAMETER;
 
-  const getBubblePixelPosition = (row: number, col: number) => {
+  useEffect(() => {
+    const calculateScale = () => {
+      if (!boardRef.current) return;
+      const parentWidth = boardRef.current.parentElement?.clientWidth || 380;
+      const baseBoardWidth = BOARD_COLS * BUBBLE_DIAMETER_BASE + BUBBLE_RADIUS_BASE;
+      const newScale = Math.min(1, parentWidth / baseBoardWidth);
+      setScale(newScale);
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
+
+  const getBubblePixelPosition = useCallback((row: number, col: number) => {
     const x = col * BUBBLE_DIAMETER + (row % 2 === 1 ? BUBBLE_RADIUS : 0);
     const y = row * HEX_HEIGHT;
     return { x, y };
-  };
+  }, [BUBBLE_DIAMETER, BUBBLE_RADIUS, HEX_HEIGHT]);
 
   const shooterPosition = useMemo(() => ({
     x: BOARD_PIXEL_WIDTH / 2 - BUBBLE_RADIUS,
-    y: BOARD_PIXEL_HEIGHT + 20,
-  }), []);
+    y: BOARD_PIXEL_HEIGHT + (isMobile ? 10 : 20),
+  }), [BOARD_PIXEL_WIDTH, BOARD_PIXEL_HEIGHT, BUBBLE_RADIUS, isMobile]);
 
   const calculateTrajectory = (angle: number) => {
     const angleRad = angle * Math.PI / 180;
     
     let x = shooterPosition.x + BUBBLE_RADIUS;
     let y = shooterPosition.y + BUBBLE_RADIUS;
-    let dx = Math.cos(angleRad) * 8;
-    let dy = Math.sin(angleRad) * 8;
+    let dx = Math.cos(angleRad) * 8 * scale;
+    let dy = Math.sin(angleRad) * 8 * scale;
 
     const points = [`${x},${y}`];
 
@@ -78,7 +99,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     setTrajectory(points.join(' '));
   }
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (isGameOver || !boardRef.current || isAdvancing || shootingBubble) {
       if (trajectory !== "") setTrajectory("");
       return;
@@ -98,15 +119,15 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
   };
 
   const handleClick = () => {
-    if (isGameOver || isAdvancing || shootingBubble) return;
+    if (isGameOver || isAdvancing || shootingBubble || aimAngle === 0) return;
 
     const angleRad = aimAngle * Math.PI / 180;
     
     // Simplified trajectory simulation to find landing spot
     let x = shooterPosition.x + BUBBLE_RADIUS;
     let y = shooterPosition.y;
-    let dx = Math.cos(angleRad) * 8;
-    let dy = Math.sin(angleRad) * 8;
+    let dx = Math.cos(angleRad) * 8 * scale;
+    let dy = Math.sin(angleRad) * 8 * scale;
 
     while (y > -BUBBLE_DIAMETER) {
         x += dx;
@@ -140,7 +161,6 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
                 const cellPos = getBubblePixelPosition(r, c);
                 const dist = Math.sqrt(Math.pow(x - (cellPos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (cellPos.y + BUBBLE_RADIUS), 2));
                 
-                // Check if the cell has neighbors (or is in the top row)
                 const isNeighborToExisting = 
                     (r > 0 && board[r - 1]?.[c + (r % 2 === 1 ? 0 : -1)]) || // Top-left
                     (r > 0 && board[r - 1]?.[c + (r % 2 === 1 ? 1 : 0)]) || // Top-right
@@ -148,7 +168,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
                     (c < BOARD_COLS - 1 && board[r]?.[c + 1]) || // Right
                     (r < BOARD_ROWS - 1 && board[r + 1]?.[c + (r % 2 === 0 ? 0 : -1)]) || // Bottom-left
                     (r < BOARD_ROWS - 1 && board[r + 1]?.[c + (r % 2 === 0 ? 1 : 0)]) || // Bottom-right
-                    (r === 0); // Is in the top row
+                    (r === 0);
                 
                 if (isNeighborToExisting && dist < closestCell.dist) {
                     closestCell = { row: r, col: c, dist };
@@ -161,6 +181,8 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
         const landingPos = getBubblePixelPosition(closestCell.row, closestCell.col);
         const shotBubble: Bubble = { id: Date.now() + Math.random(), row: closestCell.row, col: closestCell.col, color: currentBubbleColor, type: 'normal' };
         setShootingBubble({ bubble: shotBubble, start: { x: shooterPosition.x, y: shooterPosition.y }, end: landingPos });
+        setTrajectory("");
+        setAimAngle(0);
     }
   };
 
@@ -174,18 +196,18 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
   return (
     <div
       ref={boardRef}
-      className="relative bg-card/50 rounded-lg shadow-inner overflow-hidden"
-      style={{ width: BOARD_PIXEL_WIDTH, height: BOARD_PIXEL_HEIGHT + 80, cursor: isAdvancing || shootingBubble ? 'wait' : 'pointer' }}
-      onMouseMove={handleMouseMove}
+      className="relative bg-card/50 rounded-lg shadow-inner touch-none"
+      style={{ width: BOARD_PIXEL_WIDTH, height: BOARD_PIXEL_HEIGHT + (isMobile ? 50 : 80), cursor: isAdvancing || shootingBubble ? 'wait' : 'crosshair' }}
+      onPointerMove={handlePointerMove}
       onClick={handleClick}
-      onMouseLeave={() => setTrajectory("")}
+      onPointerLeave={() => setTrajectory("")}
     >
       <div className={cn("absolute top-0 left-0 w-full h-full transition-transform duration-500 ease-in-out", isAdvancing && 'translate-y-[--hex-height]') } style={{ '--hex-height': `${HEX_HEIGHT}px` } as React.CSSProperties}>
       {board.map((row, r) =>
         row.map((bubble, c) => {
           if (!bubble) return null;
           const { x, y } = getBubblePixelPosition(r, c);
-          return <SingleBubble key={bubble.id} bubble={bubble} x={x} y={y} />;
+          return <SingleBubble key={bubble.id} bubble={bubble} x={x} y={y} scale={scale} />;
         })
       )}
       </div>
@@ -207,6 +229,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
             x={shootingBubble.start.x}
             y={shootingBubble.start.y}
             className="shooting-bubble z-10"
+            scale={scale}
           />
         </div>
       )}
@@ -228,7 +251,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
               {/* Current Bubble */}
               {!isAdvancing && !shootingBubble && (
                   <div className="absolute pointer-events-none">
-                      <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
+                      <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} scale={scale} />
                   </div>
               )}
             </div>
@@ -239,7 +262,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
       {!isGameOver && !isAdvancing && (
         <div className="absolute pointer-events-none" style={{ left: BUBBLE_RADIUS, bottom: BUBBLE_RADIUS, display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="text-sm font-bold text-primary">Next:</span>
-            <div className="w-8 h-8 rounded-full" style={{ backgroundColor: COLOR_MAP[nextBubbleColor] }}></div>
+            <div className="rounded-full" style={{ width: BUBBLE_DIAMETER * 0.8, height: BUBBLE_DIAMETER * 0.8, backgroundColor: COLOR_MAP[nextBubbleColor] }}></div>
         </div>
       )}
       

@@ -1,11 +1,12 @@
 import type { BubbleColor } from './types';
 
-export const BUBBLE_DIAMETER = 32;
-export const BUBBLE_RADIUS = BUBBLE_DIAMETER / 2;
+export const BUBBLE_DIAMETER_BASE = 28;
+export const BUBBLE_RADIUS_BASE = BUBBLE_DIAMETER_BASE / 2;
+export const HEX_HEIGHT_RATIO = 0.866; // Math.sqrt(3) / 2
+
 export const BOARD_COLS = 14;
 export const BOARD_ROWS = 20;
 export const GAME_OVER_ROW = 14;
-export const HEX_HEIGHT = BUBBLE_DIAMETER * 0.866;
 
 export const INITIAL_SHOTS = 35;
 export const BONUS_SHOTS = 10;
