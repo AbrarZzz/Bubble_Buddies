@@ -12,24 +12,24 @@ export const BONUS_SHOTS = 10;
 export const SCORE_THRESHOLD_FOR_BONUS = 5000;
 export const SHOTS_UNTIL_BOARD_ADVANCE = 5;
 
-export const BUBBLE_COLORS: BubbleColor[] = ['red', 'green', 'blue', 'yellow', 'purple', 'orange'];
+export const BUBBLE_COLORS: BubbleColor[] = ['pink-1', 'pink-2', 'pink-3', 'pink-4', 'pink-5', 'pink-6'];
 
 export const COLOR_MAP: Record<BubbleColor, string> = {
-  red: '#ef4444',
-  green: '#22c55e',
-  blue: '#3b82f6',
-  yellow: '#eab308',
-  purple: '#a855f7',
-  orange: '#f97316',
+  'pink-1': '#FFC0CB',
+  'pink-2': '#FFB6C1',
+  'pink-3': '#FF69B4',
+  'pink-4': '#FF1493',
+  'pink-5': '#DB7093',
+  'pink-6': '#C71585',
 };
 
 export const GAME_BOARD_LAYOUT: (BubbleColor | null)[][] = [
-  [null, 'red', 'red', null, 'blue', 'blue', null, null, 'yellow', 'yellow', null, 'green', 'green', null],
-  ['red', null, 'red', 'blue', null, 'blue', 'yellow', null, 'yellow', null, 'green', null, 'green', 'red'],
-  [null, 'green', 'green', null, 'purple', 'purple', null, null, 'orange', 'orange', null, 'blue', 'blue', null],
-  ['green', null, 'green', 'purple', null, 'purple', 'orange', null, 'orange', null, 'blue', null, 'blue', 'green'],
-  [null, 'yellow', 'yellow', null, 'red', 'red', null, null, 'green', 'green', null, 'purple', 'purple', null],
-  ['yellow', 'red', 'red', 'green', 'green', 'blue', 'blue', 'purple', 'purple', 'orange', 'orange', 'yellow', 'yellow', 'red'],
-  [null, 'blue', 'blue', null, 'yellow', 'yellow', null, null, 'red', 'red', null, 'purple', 'purple', null],
-  ['blue', null, 'blue', 'yellow', null, 'yellow', 'red', null, 'red', null, 'purple', null, 'purple', 'blue'],
+  [null, 'pink-1', 'pink-1', null, 'pink-2', 'pink-2', null, null, 'pink-3', 'pink-3', null, 'pink-4', 'pink-4', null],
+  ['pink-1', null, 'pink-1', 'pink-2', null, 'pink-2', 'pink-3', null, 'pink-3', null, 'pink-4', null, 'pink-4', 'pink-1'],
+  [null, 'pink-4', 'pink-4', null, 'pink-5', 'pink-5', null, null, 'pink-6', 'pink-6', null, 'pink-2', 'pink-2', null],
+  ['pink-4', null, 'pink-4', 'pink-5', null, 'pink-5', 'pink-6', null, 'pink-6', null, 'pink-2', null, 'pink-2', 'pink-4'],
+  [null, 'pink-3', 'pink-3', null, 'pink-1', 'pink-1', null, null, 'pink-4', 'pink-4', null, 'pink-5', 'pink-5', null],
+  ['pink-3', 'pink-1', 'pink-1', 'pink-4', 'pink-4', 'pink-2', 'pink-2', 'pink-5', 'pink-5', 'pink-6', 'pink-6', 'pink-3', 'pink-3', 'pink-1'],
+  [null, 'pink-2', 'pink-2', null, 'pink-3', 'pink-3', null, null, 'pink-1', 'pink-1', null, 'pink-5', 'pink-5', null],
+  ['pink-2', null, 'pink-2', 'pink-3', null, 'pink-3', 'pink-1', null, 'pink-1', null, 'pink-5', null, 'pink-5', 'pink-2'],
 ];

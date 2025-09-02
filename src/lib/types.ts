@@ -1,4 +1,4 @@
-export type BubbleColor = 'red' | 'green' | 'blue' | 'yellow' | 'purple' | 'orange';
+export type BubbleColor = 'pink-1' | 'pink-2' | 'pink-3' | 'pink-4' | 'pink-5' | 'pink-6';
 
 export interface Bubble {
   id: number;

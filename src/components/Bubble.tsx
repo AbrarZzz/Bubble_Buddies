@@ -8,9 +8,10 @@ interface BubbleProps {
   x: number;
   y: number;
   className?: string;
+  onAnimationEnd?: () => void;
 }
 
-export default function SingleBubble({ bubble, x, y, className }: BubbleProps) {
+export default function SingleBubble({ bubble, x, y, className, onAnimationEnd }: BubbleProps) {
   const animationClass = bubble.status === 'popping' 
     ? 'animate-bubble-pop' 
     : bubble.status === 'falling'
@@ -19,6 +20,7 @@ export default function SingleBubble({ bubble, x, y, className }: BubbleProps) {
 
   return (
     <div
+      onAnimationEnd={onAnimationEnd}
       className={cn("absolute rounded-full flex items-center justify-center", animationClass, className)}
       style={{
         width: BUBBLE_DIAMETER,
