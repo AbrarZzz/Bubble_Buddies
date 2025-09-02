@@ -5,10 +5,12 @@ export const BUBBLE_RADIUS = BUBBLE_DIAMETER / 2;
 export const BOARD_COLS = 14;
 export const BOARD_ROWS = 20;
 export const GAME_OVER_ROW = 14;
+export const HEX_HEIGHT = BUBBLE_DIAMETER * 0.866;
 
 export const INITIAL_SHOTS = 35;
 export const BONUS_SHOTS = 10;
 export const SCORE_THRESHOLD_FOR_BONUS = 5000;
+export const SHOTS_UNTIL_BOARD_ADVANCE = 5;
 
 export const BUBBLE_COLORS: BubbleColor[] = ['red', 'green', 'blue', 'yellow', 'purple', 'orange'];
 
@@ -27,4 +29,7 @@ export const GAME_BOARD_LAYOUT: (BubbleColor | null)[][] = [
   [null, 'green', 'green', null, 'purple', 'purple', null, null, 'orange', 'orange', null, 'blue', 'blue', null],
   ['green', null, 'green', 'purple', null, 'purple', 'orange', null, 'orange', null, 'blue', null, 'blue', 'green'],
   [null, 'yellow', 'yellow', null, 'red', 'red', null, null, 'green', 'green', null, 'purple', 'purple', null],
+  ['yellow', 'red', 'red', 'green', 'green', 'blue', 'blue', 'purple', 'purple', 'orange', 'orange', 'yellow', 'yellow', 'red'],
+  [null, 'blue', 'blue', null, 'yellow', 'yellow', null, null, 'red', 'red', null, 'purple', 'purple', null],
+  ['blue', null, 'blue', 'yellow', null, 'yellow', 'red', null, 'red', null, 'purple', null, 'purple', 'blue'],
 ];

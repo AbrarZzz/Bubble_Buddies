@@ -10,7 +10,8 @@ import {
   GAME_OVER_ROW,
   INITIAL_SHOTS,
   BONUS_SHOTS,
-  SCORE_THRESHOLD_FOR_BONUS
+  SCORE_THRESHOLD_FOR_BONUS,
+  SHOTS_UNTIL_BOARD_ADVANCE
 } from '@/lib/game-constants';
 
 let bubbleIdCounter = 0;
@@ -46,6 +47,8 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
   const [score, setScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const scoreMilestone = useRef(SCORE_THRESHOLD_FOR_BONUS);
+  const [shotsUntilAdvance, setShotsUntilAdvance] = useState(SHOTS_UNTIL_BOARD_ADVANCE);
+  const [isAdvancing, setIsAdvancing] = useState(false);
 
   const availableColors = useMemo(() => {
     const colorsOnBoard = new Set<BubbleColor>();
@@ -72,6 +75,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     setIsGameOver(false);
     resetBubbles();
     scoreMilestone.current = SCORE_THRESHOLD_FOR_BONUS;
+    setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
   }, [resetBubbles]);
 
   useEffect(() => {
@@ -85,8 +89,39 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     }
   }, [score]);
 
+  const advanceBoard = () => {
+    setIsAdvancing(true);
+    setTimeout(() => {
+      setBoard(prevBoard => {
+        const newBoard = prevBoard.map(row => row.map(b => b ? {...b, row: b.row + 1} : null));
+        newBoard.pop();
+        
+        const newRow: (Bubble | null)[] = Array(BOARD_COLS).fill(null);
+        for(let c = 0; c < BOARD_COLS; c++) {
+          if (Math.random() > 0.4) {
+             newRow[c] = createBubble(0, c, getNextBubbleColor());
+          }
+        }
+        newBoard.unshift(newRow);
+
+        newBoard.forEach((row, r) => row.forEach((bubble, c) => {
+            if(bubble) {
+                bubble.row = r;
+            }
+        }));
+
+        if (newBoard[GAME_OVER_ROW].some(b => b !== null)) {
+            endGame();
+        }
+
+        return newBoard;
+      });
+      setIsAdvancing(false);
+    }, 500);
+  };
+  
   const handleShot = (newBubble: Bubble) => {
-    if (isGameOver) return;
+    if (isGameOver || isAdvancing) return;
     
     setShotsRemaining(s => s - 1);
 
@@ -134,6 +169,14 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
         setBoard(boardAfterPop);
         checkWinCondition(boardAfterPop);
       }
+      
+      if (shotsUntilAdvance - 1 <= 0) {
+        advanceBoard();
+        setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
+      } else {
+        setShotsUntilAdvance(s => s - 1);
+      }
+
     }, 300);
 
     if (!didPop) {
@@ -263,5 +306,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     isGameOver,
     handleShot,
     resetGame,
+    isAdvancing,
+    shotsUntilAdvance,
   };
 };
