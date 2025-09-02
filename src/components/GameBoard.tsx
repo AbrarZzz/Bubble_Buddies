@@ -32,14 +32,14 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
 
   const shooterPosition = useMemo(() => ({
     x: BOARD_PIXEL_WIDTH / 2 - BUBBLE_RADIUS,
-    y: BOARD_PIXEL_HEIGHT + 20, // Adjusted for cannon
+    y: BOARD_PIXEL_HEIGHT + 20,
   }), []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isGameOver || !boardRef.current || isAdvancing || shootingBubble) return;
     const rect = boardRef.current.getBoundingClientRect();
     const cannonCenterX = shooterPosition.x + BUBBLE_RADIUS;
-    const cannonCenterY = shooterPosition.y;
+    const cannonCenterY = shooterPosition.y + BUBBLE_RADIUS;
     const x = e.clientX - rect.left - cannonCenterX;
     const y = e.clientY - rect.top - cannonCenterY;
     const angle = Math.atan2(y, x) * 180 / Math.PI;
@@ -157,33 +157,25 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
         </div>
       )}
 
-      {/* Cannon and Aiming UI */}
+      {/* Aiming UI */}
       {!isGameOver && (
-          <div className="absolute" style={{ left: shooterPosition.x - 10, top: shooterPosition.y - 10 }}>
-              {/* Cannon Base */}
-              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-16 h-16 bg-card rounded-full" />
-              </div>
-
-              {/* Cannon Barrel and Arrow */}
+          <div className="absolute" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
+              {/* Aiming Arrow */}
               <div
-                className="absolute w-20 h-20 top-0 left-0 flex justify-center pointer-events-none"
+                className="absolute w-full h-full pointer-events-none"
                 style={{
                     transform: `rotate(${aimAngle + 90}deg)`,
-                    transformOrigin: 'center center',
+                    transformOrigin: `${BUBBLE_RADIUS}px ${BUBBLE_RADIUS}px`,
                     transition: 'transform 0.1s ease-out'
                 }}
               >
-                  {/* Barrel */}
-                  <div className="absolute top-[-20px] w-8 h-12 bg-muted rounded-t-md shadow-inner" />
-                  
-                  {/* Arrow */}
                   {!isAdvancing && !shootingBubble && (
                     <svg
                       width="12"
-                      height="100"
-                      viewBox="0 0 12 100"
-                      className="absolute -top-24"
+                      height="120"
+                      viewBox="0 0 12 120"
+                      className="absolute"
+                      style={{ bottom: BUBBLE_DIAMETER - 10, left: '50%', transform: 'translateX(-50%)' }}
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
@@ -193,7 +185,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
                         </linearGradient>
                       </defs>
-                      <path d="M6 100 L6 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
+                      <path d="M6 120 L6 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
                       <path d="M6 0 L11 10 L1 10 Z" fill="hsl(var(--primary))" />
                     </svg>
                   )}
@@ -201,7 +193,7 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
 
               {/* Current Bubble */}
               {!isAdvancing && !shootingBubble && (
-                  <div className="absolute pointer-events-none" style={{ left: 10, top: 10 }}>
+                  <div className="absolute pointer-events-none">
                       <SingleBubble bubble={{id: -2, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />
                   </div>
               )}
@@ -223,5 +215,3 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
     </div>
   );
 }
-
-    
