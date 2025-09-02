@@ -10,7 +10,7 @@ export const HEX_HEIGHT = BUBBLE_DIAMETER * 0.866;
 export const INITIAL_SHOTS = 35;
 export const BONUS_SHOTS = 10;
 export const SCORE_THRESHOLD_FOR_BONUS = 5000;
-export const SHOTS_UNTIL_BOARD_ADVANCE = 5;
+export const SHOTS_UNTIL_BOARD_ADVANCE = 1;
 
 export const BUBBLE_COLORS: BubbleColor[] = ['pink-1', 'pink-2', 'pink-3', 'pink-4', 'pink-5', 'pink-6'];
 
@@ -33,3 +33,5 @@ export const GAME_BOARD_LAYOUT: (BubbleColor | null)[][] = [
   [null, 'pink-2', 'pink-2', null, 'pink-3', 'pink-3', null, null, 'pink-1', 'pink-1', null, 'pink-5', 'pink-5', null],
   ['pink-2', null, 'pink-2', 'pink-3', null, 'pink-3', 'pink-1', null, 'pink-1', null, 'pink-5', null, 'pink-5', 'pink-2'],
 ];
+
+    

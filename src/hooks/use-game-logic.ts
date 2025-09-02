@@ -189,7 +189,7 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
 
   const handleBoardAdvancement = (didPop: boolean) => {
     if (!didPop) {
-      if (shotsUntilAdvance - 1 <= 0) {
+      if (shotsUntilAdvance <= 0) {
         advanceBoard();
         setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
       } else {
@@ -333,3 +333,5 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
     shotsUntilAdvance,
   };
 };
+
+    
