@@ -170,24 +170,25 @@ export default function GameBoard({ board, onShot, currentBubbleColor, nextBubbl
                 }}
               >
                   {!isAdvancing && !shootingBubble && (
-                    <svg
-                      width="12"
-                      height="120"
-                      viewBox="0 0 12 120"
-                      className="absolute"
-                      style={{ bottom: BUBBLE_DIAMETER - 10, left: '50%', transform: 'translateX(-50%)' }}
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <defs>
-                        <linearGradient id="arrow-gradient" x1="0.5" y1="0" x2="0.5" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.8" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M6 120 L6 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
-                      <path d="M6 0 L11 10 L1 10 Z" fill="hsl(var(--primary))" />
-                    </svg>
+                     <svg
+                        width="8"
+                        height="150"
+                        viewBox="0 0 8 150"
+                        className="absolute"
+                        style={{ bottom: BUBBLE_DIAMETER - 5, left: '50%', transform: 'translateX(-50%)' }}
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <linearGradient id="arrow-gradient" x1="0.5" y1="0" x2="0.5" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+                            <stop offset="80%" stopColor="hsl(var(--primary))" stopOpacity="0.5" />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M4 150 L4 10" stroke="url(#arrow-gradient)" strokeWidth="2" />
+                        <path d="M4 0 L8 12 L0 12 Z" fill="hsl(var(--primary))" />
+                      </svg>
                   )}
               </div>
 
