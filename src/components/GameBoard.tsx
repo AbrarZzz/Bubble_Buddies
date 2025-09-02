@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import type { GameBoard, Bubble, BubbleColor } from '@/lib/types';
-import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, COLOR_MAP, GAME_OVER_ROW } from '@/lib/game-constants';
+import { BUBBLE_DIAMETER, BUBBLE_RADIUS, BOARD_COLS, BOARD_ROWS, GAME_OVER_ROW } from '@/lib/game-constants';
 import SingleBubble from './Bubble';
 import { ArrowUp } from 'lucide-react';
 
@@ -20,7 +20,7 @@ const BOARD_PIXEL_HEIGHT = (BOARD_ROWS -1) * HEX_HEIGHT + BUBBLE_DIAMETER;
 export default function GameBoard({ board, onShot, currentBubbleColor, isGameOver }: GameBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [aimAngle, setAimAngle] = useState(0);
-  const [trajectory, setTrajectory] = useState<{ x: number, y: number }[]>([]);
+  const [shootingBubble, setShootingBubble] = useState<Bubble | null>(null);
 
   const getBubblePixelPosition = (row: number, col: number) => {
     const x = col * BUBBLE_DIAMETER + (row % 2 === 1 ? BUBBLE_RADIUS : 0);
@@ -33,79 +33,8 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
     y: BOARD_PIXEL_HEIGHT + 10,
   }), []);
 
-  const calculateTrajectory = useCallback((angle: number): { x: number, y: number }[] => {
-    const points: { x: number, y: number }[] = [];
-    const angleRad = angle * Math.PI / 180;
-    
-    let x = shooterPosition.x + BUBBLE_RADIUS;
-    let y = shooterPosition.y + BUBBLE_RADIUS;
-    points.push({ x, y });
-    
-    let dx = Math.cos(angleRad);
-    let dy = Math.sin(angleRad);
-
-    for (let i = 0; i < 5; i++) { // Max 5 bounces
-        let wallHit = false;
-        
-        // Ray-casting loop
-        let lastX = x;
-        let lastY = y;
-
-        let step = 0;
-        const maxSteps = 200; // Prevent infinite loops
-
-        while(step < maxSteps) {
-            x += dx * 5;
-            y += dy * 5;
-            
-            if (x < BUBBLE_RADIUS || x > BOARD_PIXEL_WIDTH - BUBBLE_RADIUS) {
-                x = Math.max(BUBBLE_RADIUS, Math.min(x, BOARD_PIXEL_WIDTH - BUBBLE_RADIUS));
-                dx *= -1;
-                wallHit = true;
-                break;
-            }
-
-            let bubbleHit = false;
-            for (let r = 0; r < BOARD_ROWS; r++) {
-                for (let c = 0; c < BOARD_COLS; c++) {
-                    if (board[r][c]) {
-                        const bubblePos = getBubblePixelPosition(r, c);
-                        const dist = Math.sqrt(Math.pow(x - (bubblePos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (bubblePos.y + BUBBLE_RADIUS), 2));
-                        if (dist < BUBBLE_DIAMETER) {
-                            bubbleHit = true;
-                            break;
-                        }
-                    }
-                }
-                if (bubbleHit) break;
-            }
-
-            if (bubbleHit || y < -BUBBLE_DIAMETER) {
-                break;
-            }
-
-            step++;
-        }
-
-        points.push({ x, y });
-        if (!wallHit) break;
-    }
-
-    return points;
-}, [shooterPosition, board]);
-
-
-  useEffect(() => {
-    if (!isGameOver) {
-      setTrajectory(calculateTrajectory(aimAngle));
-    } else {
-      setTrajectory([]);
-    }
-  }, [aimAngle, isGameOver, calculateTrajectory]);
-
-
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (isGameOver || !boardRef.current) return;
+    if (isGameOver || !boardRef.current || shootingBubble) return;
     const rect = boardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left - shooterPosition.x - BUBBLE_RADIUS;
     const y = e.clientY - rect.top - shooterPosition.y - BUBBLE_RADIUS;
@@ -115,9 +44,43 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
   };
 
   const handleClick = () => {
-    if (isGameOver || trajectory.length < 2) return;
+    if (isGameOver || shootingBubble) return;
+
+    // Simplified trajectory for landing position
+    const angleRad = aimAngle * Math.PI / 180;
+    let x = shooterPosition.x + BUBBLE_RADIUS;
+    let y = shooterPosition.y + BUBBLE_RADIUS;
+    let dx = Math.cos(angleRad);
+    let dy = Math.sin(angleRad);
+
+    let landingPoint = { x, y };
     
-    const landingPoint = trajectory[trajectory.length - 1];
+    while (y > -BUBBLE_DIAMETER) {
+        x += dx * 5;
+        y += dy * 5;
+
+        if (x < BUBBLE_RADIUS || x > BOARD_PIXEL_WIDTH - BUBBLE_RADIUS) {
+            dx *= -1;
+        }
+
+        let hit = false;
+        for (let r = 0; r < BOARD_ROWS; r++) {
+            for (let c = 0; c < BOARD_COLS; c++) {
+                if (board[r][c]) {
+                    const bubblePos = getBubblePixelPosition(r, c);
+                    const dist = Math.sqrt(Math.pow(x - (bubblePos.x + BUBBLE_RADIUS), 2) + Math.pow(y - (bubblePos.y + BUBBLE_RADIUS), 2));
+                    if (dist < BUBBLE_DIAMETER) {
+                        hit = true;
+                        break;
+                    }
+                }
+            }
+            if (hit) break;
+        }
+        if(hit) break;
+    }
+    landingPoint = {x, y};
+
 
     // Find closest grid cell to landing position
     let closestCell = { row: -1, col: -1, dist: Infinity };
@@ -134,7 +97,13 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
     }
     
     if (closestCell.row !== -1) {
-        onShot({ id: -1, row: closestCell.row, col: closestCell.col, color: currentBubbleColor, type: 'normal' });
+        const shotBubble: Bubble = { id: -2, row: closestCell.row, col: closestCell.col, color: currentBubbleColor, type: 'normal' };
+        setShootingBubble(shotBubble);
+        
+        setTimeout(() => {
+            onShot(shotBubble);
+            setShootingBubble(null);
+        }, 300); // Corresponds to animation duration
     }
   };
 
@@ -147,19 +116,6 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
       onMouseMove={handleMouseMove}
       onClick={handleClick}
     >
-        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            {trajectory.length > 1 && (
-                <polyline
-                    points={trajectory.map(p => `${p.x},${p.y}`).join(' ')}
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="2"
-                    strokeDasharray="4 4"
-                    fill="none"
-                    opacity={0.7}
-                />
-            )}
-        </svg>
-
       {board.map((row, r) =>
         row.map((bubble, c) => {
           if (!bubble) return null;
@@ -168,7 +124,21 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
         })
       )}
 
-      {!isGameOver && (
+      {shootingBubble && (
+        <div 
+          className="absolute animate-bubble-shoot" 
+          style={{
+            '--start-x': `${shooterPosition.x}px`,
+            '--start-y': `${shooterPosition.y}px`,
+            '--end-x': `${getBubblePixelPosition(shootingBubble.row, shootingBubble.col).x}px`,
+            '--end-y': `${getBubblePixelPosition(shootingBubble.row, shootingBubble.col).y}px`,
+          } as React.CSSProperties}
+          >
+          <SingleBubble bubble={shootingBubble} x={0} y={0} />
+        </div>
+      )}
+
+      {!isGameOver && !shootingBubble && (
           <>
             <div className="absolute pointer-events-none" style={{ left: shooterPosition.x, top: shooterPosition.y }}>
                 <SingleBubble bubble={{id: -1, row: -1, col: -1, color: currentBubbleColor, type: 'normal'}} x={0} y={0} />

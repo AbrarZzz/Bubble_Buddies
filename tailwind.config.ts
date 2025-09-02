@@ -95,6 +95,10 @@ export default {
         'bubble-fall': {
           '0%': { transform: 'translateY(0)', opacity: '1' },
           '100%': { transform: 'translateY(100px)', opacity: '0' },
+        },
+        'bubble-shoot': {
+          '0%': { transform: 'translate(var(--start-x), var(--start-y))' },
+          '100%': { transform: 'translate(var(--end-x), var(--end-y))' },
         }
       },
       animation: {
@@ -102,6 +106,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'bubble-pop': 'bubble-pop 0.3s ease-out forwards',
         'bubble-fall': 'bubble-fall 0.5s ease-in forwards',
+        'bubble-shoot': 'bubble-shoot 0.3s linear forwards',
       },
     },
   },
