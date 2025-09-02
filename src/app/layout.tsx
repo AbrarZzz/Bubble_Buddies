@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Bubble Burst Blitz",
+  title: "Bubble Buddies",
   description: "A fun and exciting bubble shooter game.",
 };
 

@@ -27,7 +27,7 @@ export default function Registration({ onRegister }: RegistrationProps) {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Sparkles className="h-8 w-8" />
           </div>
-          <CardTitle className="text-3xl font-bold tracking-tighter text-primary">Bubble Burst Blitz</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tighter text-primary">Bubble Buddies</CardTitle>
           <CardDescription className="text-muted-foreground pt-2">Enter your name to join the fun!</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -44,7 +44,7 @@ export default function Registration({ onRegister }: RegistrationProps) {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full h-12 text-lg" disabled={!name.trim()}>
-              Start Blitz
+              Start Playing
             </Button>
           </CardFooter>
         </form>

@@ -15,12 +15,12 @@ export const SHOTS_UNTIL_BOARD_ADVANCE = 5;
 export const BUBBLE_COLORS: BubbleColor[] = ['pink-1', 'pink-2', 'pink-3', 'pink-4', 'pink-5', 'pink-6'];
 
 export const COLOR_MAP: Record<BubbleColor, string> = {
-  'pink-1': '#FFC0CB',
-  'pink-2': '#FFB6C1',
-  'pink-3': '#FF69B4',
-  'pink-4': '#FF1493',
-  'pink-5': '#DB7093',
-  'pink-6': '#C71585',
+  'pink-1': '#FFECF5', // Lightest
+  'pink-2': '#FFB3DE',
+  'pink-3': '#FF7AC2',
+  'pink-4': '#E85AA3',
+  'pink-5': '#C53C81',
+  'pink-6': '#A02462', // Darkest
 };
 
 export const GAME_BOARD_LAYOUT: (BubbleColor | null)[][] = [

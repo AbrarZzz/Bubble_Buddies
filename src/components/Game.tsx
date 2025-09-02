@@ -72,7 +72,7 @@ export default function Game({ player, leaderboard, onGameOver, onPlayAgain }: G
 
       <aside className="w-full lg:w-72 flex flex-col gap-6 items-center">
           <div className="w-full flex justify-between items-center px-4">
-            <h1 className="text-3xl font-bold text-primary">Bubble Burst Blitz</h1>
+            <h1 className="text-3xl font-bold text-primary">Bubble Buddies</h1>
             <Button onClick={handleReset}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 New Game
