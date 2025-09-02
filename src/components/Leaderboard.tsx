@@ -10,35 +10,28 @@ interface LeaderboardProps {
 }
 
 export default function Leaderboard({ entries, currentPlayer }: LeaderboardProps) {
+  const topEntries = entries.slice(0, 5);
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-            <Crown className="text-yellow-400"/> Leaderboard
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-1/6">Rank</TableHead>
-              <TableHead>Player</TableHead>
-              <TableHead className="text-right">Score</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {entries.slice(0, 5).map((entry, index) => (
-              <TableRow
+    <Card className="shadow-lg w-full max-w-4xl">
+      <CardContent className="p-2">
+        <div className="flex justify-around items-center">
+            {topEntries.map((entry, index) => (
+              <div
                 key={entry.name}
-                className={cn(entry.name === currentPlayer && 'bg-primary/20')}
+                className={cn(
+                    'flex items-center gap-3 p-2 rounded-lg',
+                    entry.name === currentPlayer && 'bg-primary/20'
+                )}
               >
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell>{entry.name}</TableCell>
-                <TableCell className="text-right">{entry.score}</TableCell>
-              </TableRow>
+                <div className="font-bold text-lg text-primary">#{index + 1}</div>
+                <div>
+                    <div className="font-semibold">{entry.name}</div>
+                    <div className="text-sm text-muted-foreground">{entry.score.toLocaleString()}</div>
+                </div>
+                {index === 0 && <Crown className="w-6 h-6 text-yellow-400 ml-2"/>}
+              </div>
             ))}
-          </TableBody>
-        </Table>
+        </div>
       </CardContent>
     </Card>
   );
