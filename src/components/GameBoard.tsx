@@ -89,8 +89,8 @@ export default function GameBoard({ board, onShot, currentBubbleColor, isGameOve
               (r < BOARD_ROWS-1 && board[r+1][c]) ||
               (c > 0 && board[r][c-1]) ||
               (c < BOARD_COLS-1 && board[r][c+1]) ||
-              (r > 0 && board[r-1][c + (r % 2 === 1 ? 1 : -1)]) ||
-              (r < BOARD_ROWS-1 && board[r+1][c + (r % 2 === 1 ? 1 : -1)])
+              (r > 0 && c > 0 && board[r-1][c + (r % 2 === 1 ? 0 : -1)]) ||
+              (r > 0 && c < BOARD_COLS -1 && board[r-1][c + (r % 2 === 1 ? 1 : 0)])
             );
             
             if (!board[r][c] && (r === 0 || isNeighborToExisting) && dist < closestCell.dist) {

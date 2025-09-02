@@ -18,7 +18,7 @@ export default function SingleBubble({ bubble, x, y }: BubbleProps) {
 
   return (
     <div
-      className={cn("absolute rounded-full flex items-center justify-center transition-all duration-300 ease-out", animationClass)}
+      className={cn("absolute rounded-full flex items-center justify-center", animationClass)}
       style={{
         width: BUBBLE_DIAMETER,
         height: BUBBLE_DIAMETER,

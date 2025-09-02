@@ -170,21 +170,28 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
         checkWinCondition(boardAfterPop);
       }
       
-      if (shotsUntilAdvance - 1 <= 0) {
-        advanceBoard();
-        setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
+      if (!didPop) {
+        if (shotsUntilAdvance - 1 <= 0) {
+          advanceBoard();
+          setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
+        } else {
+          setShotsUntilAdvance(s => s - 1);
+        }
       } else {
-        setShotsUntilAdvance(s => s - 1);
+         if (shotsUntilAdvance - 1 <= 0) {
+          advanceBoard();
+          setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
+        }
       }
 
     }, 300);
 
-    if (!didPop) {
-      if (newBubble.row >= GAME_OVER_ROW) {
-        endGame();
-      } else if (shotsRemaining - 1 <= 0) {
-        endGame();
-      }
+    if (newBubble.row >= GAME_OVER_ROW) {
+      endGame();
+    } else if (shotsRemaining - 1 <= 0) {
+      endGame();
+    } else {
+      prepareNextShot();
     }
   };
 
@@ -208,12 +215,6 @@ export const useGameLogic = (player: {name: string}, onGameOver: (name: string, 
       }, 1000);
     }
   }
-
-  useEffect(() => {
-    if (!isGameOver) {
-      prepareNextShot();
-    }
-  }, [board, isGameOver]);
 
   const findMatches = (bubble: Bubble, board: GameBoard): Bubble[] => {
     const toCheck = [bubble];
