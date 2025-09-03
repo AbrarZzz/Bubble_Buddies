@@ -1,61 +1,41 @@
 "use server";
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { LeaderboardEntry } from "@/lib/types";
 
-// Initialize Neon SQL only if the DATABASE_URL is set
-const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
+import { firestore } from "@/lib/firebase";
+import type { LeaderboardEntry } from "@/lib/types";
+import { collection, getDocs, orderBy, query, limit, doc, setDoc } from "firebase/firestore";
 
-if (!sql) {
-    console.warn("DATABASE_URL environment variable is not set. Database functionality will be disabled.");
-}
+const LEADERBOARD_COLLECTION = "leaderboard";
 
-// Function to create the leaderboard table if it doesn't exist
-async function createTable() {
-    if (!sql) return;
-    try {
-        await sql`
-            CREATE TABLE IF NOT EXISTS leaderboard (
-            name VARCHAR(255) PRIMARY KEY,
-            score INT
-            );
-        `;
-    } catch (error) {
-        console.error("Failed to create leaderboard table:", error);
-    }
-}
-
-// Ensure table exists on startup
-if (sql) {
-    createTable().catch(console.error);
-}
-
+// Note: Firestore security rules should be configured to manage access.
+// For this example, we'll assume they are open for authenticated users.
 
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
-  if (!sql) return [];
   try {
-    const data = await sql`
-      SELECT name, score 
-      FROM leaderboard 
-      ORDER BY score DESC 
-      LIMIT 10;
-    `;
-    return data as LeaderboardEntry[];
+    const q = query(
+      collection(firestore, LEADERBOARD_COLLECTION),
+      orderBy("score", "desc"),
+      limit(10)
+    );
+    const querySnapshot = await getDocs(q);
+    const leaderboard: LeaderboardEntry[] = [];
+    querySnapshot.forEach((doc) => {
+      leaderboard.push(doc.data() as LeaderboardEntry);
+    });
+    return leaderboard;
   } catch (error) {
     console.error("Failed to fetch leaderboard:", error);
+    // In case of error (e.g., permissions), return an empty array.
     return [];
   }
 }
 
 export async function updatePlayerScore(name: string, score: number): Promise<void> {
-    if (!sql) return;
-    try {
-        await sql`
-            INSERT INTO leaderboard (name, score)
-            VALUES (${name}, ${score})
-            ON CONFLICT (name) 
-            DO UPDATE SET score = EXCLUDED.score;
-        `;
-    } catch (error) {
-        console.error("Failed to update score for player:", name, error);
-    }
+  try {
+    const playerDocRef = doc(firestore, LEADERBOARD_COLLECTION, name);
+    // Using setDoc with merge: true will create the document if it doesn't exist,
+    // or update it if it does.
+    await setDoc(playerDocRef, { name, score }, { merge: true });
+  } catch (error) {
+    console.error("Failed to update score for player:", name, error);
+  }
 }
