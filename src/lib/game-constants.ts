@@ -9,7 +9,7 @@ export const BOARD_ROWS = 20;
 export const GAME_OVER_ROW = 14;
 
 export const INITIAL_SHOTS = 20;
-export const BONUS_SHOTS = 10;
+export const BONUS_SHOTS = 5;
 export const SCORE_THRESHOLD_FOR_BONUS = 5000;
 export const SHOTS_UNTIL_BOARD_ADVANCE = 3;
 

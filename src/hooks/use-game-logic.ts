@@ -49,6 +49,7 @@ export const useGameLogic = (player: {name: string}, onScoreUpdate: (name: strin
   const scoreMilestone = useRef(SCORE_THRESHOLD_FOR_BONUS);
   const [shotsUntilAdvance, setShotsUntilAdvance] = useState(SHOTS_UNTIL_BOARD_ADVANCE);
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   const availableColors = useMemo(() => {
     const colorsOnBoard = new Set<BubbleColor>();
@@ -76,11 +77,8 @@ export const useGameLogic = (player: {name: string}, onScoreUpdate: (name: strin
     resetBubbles();
     scoreMilestone.current = SCORE_THRESHOLD_FOR_BONUS;
     setShotsUntilAdvance(SHOTS_UNTIL_BOARD_ADVANCE);
+    setStreak(0);
   }, [resetBubbles]);
-
-  useEffect(() => {
-    resetBubbles();
-  }, [availableColors, resetBubbles]);
 
   useEffect(() => {
     if (score >= scoreMilestone.current) {
@@ -142,7 +140,9 @@ export const useGameLogic = (player: {name: string}, onScoreUpdate: (name: strin
   
     if (matches.length >= 3) {
       didPop = true;
+      setStreak(s => s + 1);
       const poppedIds = new Set(matches.map(b => b.id));
+      const streakBonus = Math.min(streak * 10, 100);
       
       let boardWithPopping = newBoard.map(row => row.map(b => {
         if (b && poppedIds.has(b.id)) {
@@ -151,13 +151,14 @@ export const useGameLogic = (player: {name: string}, onScoreUpdate: (name: strin
         return b;
       }));
       setBoard(boardWithPopping);
-      setScore(s => s + matches.length * 10);
+      setScore(s => s + (matches.length * 10) + streakBonus);
   
       setTimeout(() => {
         let boardAfterPop = boardWithPopping.map(row => row.map(b => (b && b.status === 'popping' ? null : b)));
         processFloatingBubbles(boardAfterPop, true);
       }, 300); // match animation duration
     } else {
+        setStreak(0);
         setBoard(newBoard);
         processFloatingBubbles(newBoard, false);
     }
