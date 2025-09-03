@@ -5,50 +5,38 @@ import Registration from "@/components/Registration";
 import Game from "@/components/Game";
 import type { LeaderboardEntry } from "@/lib/types";
 import { getLeaderboard, updatePlayerScore } from "./actions";
-import { firestore } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, limit } from "firebase/firestore";
 
 export default function Home() {
   const [player, setPlayer] = useState<{ name: string } | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
+  // Function to fetch the leaderboard
+  const fetchLeaderboard = useCallback(async () => {
+    const data = await getLeaderboard();
+    setLeaderboard(data);
+  }, []);
+
+  // Fetch initial leaderboard data when the component mounts
   useEffect(() => {
-    if (!player) return;
-
-    const q = query(
-      collection(firestore, "leaderboard"),
-      orderBy("score", "desc"),
-      limit(10)
-    );
-
-    // Use onSnapshot for real-time updates
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const data: LeaderboardEntry[] = [];
-      querySnapshot.forEach((doc) => {
-        data.push(doc.data() as LeaderboardEntry);
-      });
-      setLeaderboard(data);
-    });
-
-    // Clean up the listener when the component unmounts or player changes
-    return () => unsubscribe();
-  }, [player]);
-
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
   const handleRegister = async (name: string) => {
+    await updatePlayerScore(name, 0); // Add player to leaderboard
     setPlayer({ name });
-    // Set initial score to 0 to get the player on the board
-    await updatePlayerScore(name, 0); 
+    fetchLeaderboard(); // Refresh leaderboard after registering
   };
 
   const updateLeaderboard = useCallback(async (name: string, score: number) => {
     await updatePlayerScore(name, score);
-  }, []);
+    fetchLeaderboard(); // Refresh leaderboard after score update
+  }, [fetchLeaderboard]);
 
   const handlePlayAgain = async () => {
     if (player) {
       // Reset score to 0, but keep player on the leaderboard
       await updatePlayerScore(player.name, 0);
+      fetchLeaderboard(); // Refresh leaderboard
     }
   };
 
