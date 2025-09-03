@@ -22,21 +22,21 @@ export default function Home() {
   }, [fetchLeaderboard]);
 
   const handleRegister = async (name: string) => {
-    await updatePlayerScore(name, 0); // Add player to leaderboard
     setPlayer({ name });
-    fetchLeaderboard(); // Refresh leaderboard after registering
+    await updatePlayerScore(name, 0); // Add player to leaderboard
+    await fetchLeaderboard(); // Refresh leaderboard after registering
   };
 
   const updateLeaderboard = useCallback(async (name: string, score: number) => {
     await updatePlayerScore(name, score);
-    fetchLeaderboard(); // Refresh leaderboard after score update
+    await fetchLeaderboard(); // Refresh leaderboard after score update
   }, [fetchLeaderboard]);
 
   const handlePlayAgain = async () => {
     if (player) {
       // Reset score to 0, but keep player on the leaderboard
       await updatePlayerScore(player.name, 0);
-      fetchLeaderboard(); // Refresh leaderboard
+      await fetchLeaderboard(); // Refresh leaderboard
     }
   };
 
